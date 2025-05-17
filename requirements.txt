@@ -1,0 +1,6 @@
+openai-whisper
+gpt4all
+pyaudio==0.2.13
+soundfile==0.12.1
+pyttsx3
+pyautogui
