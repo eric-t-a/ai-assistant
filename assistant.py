@@ -2,12 +2,16 @@ from os import system
 from gpt4all import GPT4All
 import sys
 import whisper
-import os
 import threading
 import pyaudio
 import wave
 import math
 import threading
+
+isDarwin = False
+if sys.platform == 'darwin':
+    isDarwin = True
+    import tensorflow as tf
 
 audio_file_name = 'recordedFile.wav'
 chat_model = GPT4All("/Users/ericagostinho/Library/Application Support/nomic.ai/GPT4All/gpt4all-falcon-newbpe-q4_0.gguf", allow_download=False)
@@ -123,4 +127,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if isDarwin and tf.config.list_physical_devices('GPU'):
+        with tf.device("/GPU:0"):
+            main()
+    else:
+        main()
