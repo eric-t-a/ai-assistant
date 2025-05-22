@@ -1,5 +1,4 @@
 from os import system
-from gpt4all import GPT4All
 import sys
 import whisper
 import threading
@@ -7,6 +6,7 @@ import pyaudio
 import wave
 import math
 import threading
+from langchain_ollama import OllamaLLM
 
 isDarwin = False
 if sys.platform == 'darwin':
@@ -14,7 +14,7 @@ if sys.platform == 'darwin':
     import tensorflow as tf
 
 audio_file_name = 'recordedFile.wav'
-chat_model = GPT4All("/Users/ericagostinho/Library/Application Support/nomic.ai/GPT4All/gpt4all-falcon-newbpe-q4_0.gguf", allow_download=False)
+chat_model = OllamaLLM(model='llama3.2:3b')
 recording = True
 audio_model = whisper.load_model('base')
 should_talk = True
@@ -23,7 +23,7 @@ t1 = None
 
 def respond(text):
     if sys.platform == 'darwin':
-        ALLOWED_CHARS = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,?!-_$:+-/ ")
+        ALLOWED_CHARS = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,?!-_$:+/ ")
         clean_text = ''.join(c for c in text if c in ALLOWED_CHARS)
         system(f"say '{clean_text}'")
     else:
@@ -98,31 +98,44 @@ should_run = True
 def main():
     global should_run
     global recording
-    with chat_model.chat_session():
-        respond('Hi there! Press enter to talk and press it again to stop talking')
 
-        while should_run:
-            recording = True
-            waitToStartTalking()
-            startThread()
-            recordAudio()
-            stopThread()
-            transcribed = transcribe()
-            
-            if not transcribed: 
-                continue
+    respond('Hi there! Press enter to talk and press it again to stop talking')
 
-            if 'bye' in transcribed: 
-                should_run = False
-                break
-
-            output = chat_model.generate(transcribed)
-
-            print("Output: ", output)
-            if should_talk:
-                respond(output)
+    while should_run:
+        recording = True
+        waitToStartTalking()
+        startThread()
+        recordAudio()
+        stopThread()
+        transcribed = transcribe()
         
-        respond('Good bye!')
+        if not transcribed: 
+            continue
+
+        if 'bye' in transcribed: 
+            should_run = False
+            break
+
+        chunks = chat_model.stream(input=f'{transcribed}. Do not exceed 32 tokens on your answer. If your answer exceeds 32 tokens, rephrase it.')
+        
+        print("\n\n")
+        print("Answer: ")
+        phrase = ''
+        for chunk in chunks:
+            phrase += chunk
+
+            if any(c in phrase for c in '!?.:\n'):
+                print("##",phrase)
+                if should_talk:
+                    respond(phrase)
+                phrase = ''
+        if phrase:
+            print("##",phrase)
+            if should_talk:
+                respond(phrase)
+
+    
+    respond('Good bye!')
 
 
 

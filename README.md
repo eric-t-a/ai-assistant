@@ -16,15 +16,10 @@ An **AI assistant** where you can **talk to it**, and it will respond like a con
    FFmpeg is required for audio processing.
    👉 [Download FFmpeg](https://ffmpeg.org/)
 
-3. **(Optional but recommended)**: Install **GPT4All**
+3. **(Optional but recommended)**: Install **Ollama**
    Easily download and run local models.
 
-   * You can also use **Ollama** as an alternative.
-   * **Important**: Update the path to your model in the code:
-
-     ```python
-     chat_model = "path/to/your/model"
-     ```
+   * You can also use **GPT4All** as an alternative.
 
 ---
 
